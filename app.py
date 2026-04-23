@@ -272,7 +272,7 @@ def show_detection_stats(detections):
 # ─────────────────────────────────────────────────────────────
 # TABS
 # ─────────────────────────────────────────────────────────────
-tab_img, tab_video, tab_cam = st.tabs([
+tab_img, tab_cam = st.tabs([
     "🖼️   Imagen",
     "📷   Cámara",
 ])
