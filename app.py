@@ -274,7 +274,6 @@ def show_detection_stats(detections):
 # ─────────────────────────────────────────────────────────────
 tab_img, tab_video, tab_cam = st.tabs([
     "🖼️   Imagen",
-    "🎬   Video",
     "📷   Cámara",
 ])
 
@@ -311,60 +310,6 @@ with tab_img:
         st.download_button("⬇ Descargar imagen anotada", data=img_enc.tobytes(),
                            file_name="ppe_resultado.jpg", mime="image/jpeg")
 
-# ══════════════════ TAB: VIDEO ══════════════════
-with tab_video:
-    st.markdown('<div class="info-box">Sube un video MP4, AVI o MOV. El sistema procesará cada fotograma y generará un video anotado listo para descargar.</div>', unsafe_allow_html=True)
-
-    video_file = st.file_uploader(
-        "Arrastra o selecciona un video",
-        type=["mp4", "avi", "mov"],
-        key="vid",
-        label_visibility="collapsed",
-    )
-
-    if video_file:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
-            tmp.write(video_file.read())
-            tmp_path = tmp.name
-
-        out_path = tmp_path.replace(".mp4", "_anotado.mp4")
-        cap    = cv2.VideoCapture(tmp_path)
-        fps    = cap.get(cv2.CAP_PROP_FPS) or 25
-        width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        total  = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(out_path, fourcc, fps, (width, height))
-
-        barra     = st.progress(0, text="Iniciando procesamiento…")
-        vista_frm = st.empty()
-        frame_num = 0
-
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            anotado, _ = run_inference(frame)
-            writer.write(anotado)
-            frame_num += 1
-            pct = int(frame_num / max(total, 1) * 100)
-            barra.progress(pct, text=f"Fotograma {frame_num} / {total} — {pct}%")
-            if frame_num % 15 == 0:
-                vista_frm.image(cv2.cvtColor(anotado, cv2.COLOR_BGR2RGB),
-                                caption=f"Vista previa · fotograma {frame_num}",
-                                use_column_width=True)
-
-        cap.release()
-        writer.release()
-        barra.progress(100, text="✓ Procesamiento completado")
-
-        with open(out_path, "rb") as f:
-            st.download_button("⬇ Descargar video anotado", data=f.read(),
-                               file_name="ppe_video_resultado.mp4", mime="video/mp4")
-
-        os.unlink(tmp_path)
-        os.unlink(out_path)
 
 # ══════════════════ TAB: CÁMARA ══════════════════
 with tab_cam:
